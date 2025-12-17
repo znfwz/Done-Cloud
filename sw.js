@@ -1,23 +1,8 @@
-const CACHE_NAME = 'done-app-v4';
+const CACHE_NAME = 'done-app-v1';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './manifest.json',
-  './index.tsx',
-  './App.tsx',
-  './types.ts',
-  './services/storage.ts',
-  './services/i18n.ts',
-  './services/geminiService.ts',
-  './services/supabaseService.ts',
-  './components/Timeline.tsx',
-  './components/LogItem.tsx',
-  './components/InputArea.tsx',
-  './components/ExportModal.tsx',
-  './components/ImportModal.tsx',
-  './components/TrashModal.tsx',
-  './components/SearchModal.tsx',
-  './components/SyncConfigModal.tsx',
   'https://cdn.tailwindcss.com',
   'https://unpkg.com/@babel/standalone/babel.min.js',
   'https://aistudiocdn.com/react-dom@^19.2.0/client',
@@ -29,19 +14,23 @@ const ASSETS_TO_CACHE = [
   'https://esm.sh/@supabase/supabase-js@2.39.3'
 ];
 
+// Install event: Cache core assets
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      // Intentionally use individual add calls so one failure doesn't break the whole PWA
-      const promises = ASSETS_TO_CACHE.map(url => 
-        cache.add(url).catch(err => console.warn(`Failed to cache ${url}:`, err))
+      console.log('Opened cache');
+      // We use addAll but wrap it to not fail completely if one CDN is flaky
+      return Promise.all(
+        ASSETS_TO_CACHE.map(url => {
+            return cache.add(url).catch(err => console.warn('Failed to cache:', url, err));
+        })
       );
-      return Promise.all(promises);
     })
   );
   self.skipWaiting();
 });
 
+// Activate event: Clean up old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
@@ -57,15 +46,17 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
+// Fetch event: Network first, then Cache
 self.addEventListener('fetch', (event) => {
-  // Skip cross-origin requests that aren't in our allowed list or basic gets
+  // Handle cross-origin requests or non-GET requests gracefully
   if (event.request.method !== 'GET') return;
+  // Ignore unsupported schemes (like chrome-extension://)
   if (!event.request.url.startsWith('http')) return;
 
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Basic check for valid response
+        // If valid response, clone and cache it (updating the cache)
         if (!response || response.status !== 200 || response.type !== 'basic' && response.type !== 'cors' && response.type !== 'opaque') {
           return response;
         }
@@ -73,15 +64,16 @@ self.addEventListener('fetch', (event) => {
         const responseToCache = response.clone();
         caches.open(CACHE_NAME).then((cache) => {
           try {
-            cache.put(event.request, responseToCache);
-          } catch (e) {
-            // Quota exceeded or other error, ignore
+             cache.put(event.request, responseToCache);
+          } catch (err) {
+             // Ignore cache put errors (e.g. quota exceeded)
           }
         });
 
         return response;
       })
       .catch(() => {
+        // If network fails, try cache
         return caches.match(event.request);
       })
   );

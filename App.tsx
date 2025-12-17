@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import type { LogEntry, Language, Theme, SupabaseConfig } from './types.ts';
+import { LogEntry, Language, Theme, SupabaseConfig } from './types';
 import { 
   loadEntries, 
   saveEntries, 
@@ -14,17 +14,17 @@ import {
   generateId,
   loadSupabaseConfig,
   saveSupabaseConfig
-} from './services/storage.ts';
+} from './services/storage';
 import { Settings, Download, X, Moon, Sun, Globe, Key, Eye, EyeOff, Check, Database, Upload, Trash2, Search, Import, LogIn, LogOut, Cloud, RefreshCw, AlertCircle } from 'lucide-react';
-import Timeline from './components/Timeline.tsx';
-import InputArea from './components/InputArea.tsx';
-import ExportModal from './components/ExportModal.tsx';
-import ImportModal from './components/ImportModal.tsx';
-import TrashModal from './components/TrashModal.tsx';
-import SearchModal from './components/SearchModal.tsx';
-import SyncConfigModal from './components/SyncConfigModal.tsx';
-import { getTranslation } from './services/i18n.ts';
-import { syncWithCloud } from './services/supabaseService.ts';
+import Timeline from './components/Timeline';
+import InputArea from './components/InputArea';
+import ExportModal from './components/ExportModal';
+import ImportModal from './components/ImportModal';
+import TrashModal from './components/TrashModal';
+import SearchModal from './components/SearchModal';
+import SyncConfigModal from './components/SyncConfigModal';
+import { getTranslation } from './services/i18n';
+import { syncWithCloud } from './services/supabaseService';
 
 const App: React.FC = () => {
   // Initialize state directly from storage to prevent flash of empty content

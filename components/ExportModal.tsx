@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { X, Copy, CheckCircle, Sparkles, FileText, Loader2, AlignLeft, List, Calendar, Archive } from 'lucide-react';
-import { LogEntry, ExportRange, Language } from '../types.ts';
-import { generateWeeklyReport } from '../services/geminiService.ts';
-import { getTranslation } from '../services/i18n.ts';
+import { LogEntry, ExportRange, Language } from '../types';
+import { generateWeeklyReport } from '../services/geminiService';
+import { getTranslation } from '../services/i18n';
 
 interface ExportModalProps {
   isOpen: boolean;

@@ -27,7 +27,3 @@ export interface SupabaseConfig {
 
 export type Language = 'en' | 'zh';
 export type Theme = 'light' | 'dark';
-
-// Babel Standalone specific fix: 
-// Force this file to be treated as a module even if all other exports are types (which get erased).
-export const _module_marker_ = true;

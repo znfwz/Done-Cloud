@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { X, Database, Check, AlertCircle, Loader2, Code, Copy, ChevronDown, ChevronRight, RefreshCw, Clock } from 'lucide-react';
-import { Language, SupabaseConfig } from '../types.ts';
-import { getTranslation } from '../services/i18n.ts';
-import { testConnection } from '../services/supabaseService.ts';
+import { Language, SupabaseConfig } from '../types';
+import { getTranslation } from '../services/i18n';
+import { testConnection } from '../services/supabaseService';
 
 interface SyncConfigModalProps {
   isOpen: boolean;

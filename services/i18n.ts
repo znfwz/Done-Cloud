@@ -1,4 +1,4 @@
-import { Language } from '../types.ts';
+import { Language } from '../types';
 
 type Translations = {
   [key in Language]: {
@@ -155,7 +155,7 @@ export const translations: Translations = {
     restore: "恢复",
     trashEmpty: "回收站为空。",
     trashLimit: "仅保存最近 10 条删除记录。",
-    deletedToTrash: "Item moved to Trash.",
+    deletedToTrash: "记录已移至回收站。",
     confirmEmptyTrash: "确定要清空回收站吗？操作无法撤销。",
     search: "搜索",
     searchPlaceholder: "搜索关键词...",

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { LogEntry, Language } from '../types.ts';
+import { LogEntry, Language } from '../types';
 import { Trash2, Edit2, Check, X, CalendarClock } from 'lucide-react';
-import { getTranslation } from '../services/i18n.ts';
+import { getTranslation } from '../services/i18n';
 
 interface LogItemProps {
   entry: LogEntry;

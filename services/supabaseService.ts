@@ -1,34 +1,13 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import type { LogEntry, SupabaseConfig } from '../types.ts';
+import { LogEntry, SupabaseConfig } from '../types';
 
 let supabaseInstance: SupabaseClient | null = null;
 let currentUrl: string = '';
 let currentKey: string = '';
 
-// Helper to create client with safe storage options
-const createSafeClient = (url: string, key: string): SupabaseClient => {
-  try {
-    return createClient(url, key, {
-      auth: {
-        // If localStorage is blocked (Tracking Prevention), don't crash, just don't persist session
-        persistSession: typeof window !== 'undefined' && !!window.localStorage,
-        storageKey: 'done_app_supabase_auth'
-      }
-    });
-  } catch (e) {
-    console.warn("Supabase init failed with defaults, retrying without persistence", e);
-    // Fallback if the standard init fails hard
-    return createClient(url, key, {
-      auth: {
-        persistSession: false
-      }
-    });
-  }
-};
-
 export const getSupabaseClient = (url: string, key: string) => {
   if (!supabaseInstance || url !== currentUrl || key !== currentKey) {
-    supabaseInstance = createSafeClient(url, key);
+    supabaseInstance = createClient(url, key);
     currentUrl = url;
     currentKey = key;
   }
@@ -37,7 +16,7 @@ export const getSupabaseClient = (url: string, key: string) => {
 
 export const testConnection = async (url: string, key: string): Promise<boolean> => {
     try {
-        const sb = createSafeClient(url, key);
+        const sb = createClient(url, key);
         const { error } = await sb.from('logs').select('id').limit(1);
         if (error) {
              console.error("Supabase Connection Error:", error);
@@ -59,6 +38,7 @@ export const syncWithCloud = async (
     const sb = getSupabaseClient(config.url, config.key);
 
     // 1. Prepare Local Data
+    // Active entries are isDeleted: false, Trash entries are isDeleted: true
     const localActive = localEntries.map(e => ({ ...e, isDeleted: false }));
     const localTrash = trashEntries.map(e => ({ ...e, isDeleted: true }));
     const allLocal = [...localActive, ...localTrash];
@@ -93,6 +73,7 @@ export const syncWithCloud = async (
     });
 
     // 4. De-duplication (Content-based)
+    // Group by signature: timestamp + content
     const contentGroups = new Map<string, LogEntry[]>();
     
     Array.from(mergedMap.values()).forEach(entry => {
@@ -105,14 +86,20 @@ export const syncWithCloud = async (
 
     contentGroups.forEach(group => {
         if (group.length > 1) {
+            // Sort to pick a winner
+            // Rules:
+            // 1. Prefer Active (isDeleted=false) over Deleted.
+            // 2. If same status, prefer the one with alphanumeric smaller ID (deterministic tie-breaker).
             group.sort((a, b) => {
-                if (a.isDeleted !== b.isDeleted) return a.isDeleted ? 1 : -1; 
+                if (a.isDeleted !== b.isDeleted) return a.isDeleted ? 1 : -1; // Active first (false < true)
                 return a.id.localeCompare(b.id);
             });
 
             const winner = group[0];
             const losers = group.slice(1);
 
+            // Mark losers as deleted (soft delete duplicates)
+            // We update modifiedAt to ensure this deletion propagates
             losers.forEach(loser => {
                 const updatedLoser = { 
                     ...loser, 
@@ -134,6 +121,7 @@ export const syncWithCloud = async (
     const newEntries = finalMerged.filter(e => !e.isDeleted);
     const newTrash = finalMerged.filter(e => e.isDeleted);
 
+    // Sort trash by modifiedAt (most recent deletion on top)
     newTrash.sort((a, b) => {
         const timeA = new Date(a.modifiedAt || a.timestamp).getTime();
         const timeB = new Date(b.modifiedAt || b.timestamp).getTime();
