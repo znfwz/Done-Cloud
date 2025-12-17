@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { LogEntry, Language, Theme, SupabaseConfig } from './types';
+import React, { useState, useEffect, useRef } from 'react';
+import { LogEntry, Language, Theme, SupabaseConfig } from './types.ts';
 import { 
   loadEntries, 
   saveEntries, 
@@ -14,17 +14,17 @@ import {
   generateId,
   loadSupabaseConfig,
   saveSupabaseConfig
-} from './services/storage';
+} from './services/storage.ts';
 import { Settings, Download, X, Moon, Sun, Globe, Key, Eye, EyeOff, Check, Database, Upload, Trash2, Search, Import, LogIn, LogOut, Cloud, RefreshCw, AlertCircle } from 'lucide-react';
-import Timeline from './components/Timeline';
-import InputArea from './components/InputArea';
-import ExportModal from './components/ExportModal';
-import ImportModal from './components/ImportModal';
-import TrashModal from './components/TrashModal';
-import SearchModal from './components/SearchModal';
-import SyncConfigModal from './components/SyncConfigModal';
-import { getTranslation } from './services/i18n';
-import { syncWithCloud } from './services/supabaseService';
+import Timeline from './components/Timeline.tsx';
+import InputArea from './components/InputArea.tsx';
+import ExportModal from './components/ExportModal.tsx';
+import ImportModal from './components/ImportModal.tsx';
+import TrashModal from './components/TrashModal.tsx';
+import SearchModal from './components/SearchModal.tsx';
+import SyncConfigModal from './components/SyncConfigModal.tsx';
+import { getTranslation } from './services/i18n.ts';
+import { syncWithCloud } from './services/supabaseService.ts';
 
 const App: React.FC = () => {
   // Initialize state directly from storage to prevent flash of empty content
@@ -60,6 +60,12 @@ const App: React.FC = () => {
   const [supabaseConfig, setSupabaseConfig] = useState<SupabaseConfig | null>(() => loadSupabaseConfig());
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncStatus, setSyncStatus] = useState<'idle' | 'success' | 'error'>('idle');
+
+  // Ref to hold latest state for auto-sync intervals (prevents stale closures)
+  const stateRef = useRef({ entries, trash });
+  useEffect(() => {
+    stateRef.current = { entries, trash };
+  }, [entries, trash]);
 
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
@@ -184,43 +190,72 @@ const App: React.FC = () => {
   };
 
   const handleSyncClick = () => {
-      // If no config or if the previous sync failed (error state), open config modal
-      if (!supabaseConfig || syncStatus === 'error') {
-          setIsSettingsOpen(false); // close settings to show modal clearly
+      // If no config, open config modal.
+      // If error, we simply retry sync (user can use the gear icon to fix config).
+      if (!supabaseConfig) {
+          setIsSettingsOpen(false); 
           setIsSyncConfigOpen(true);
       } else {
           performSync(supabaseConfig);
       }
   };
 
-  const performSync = async (config: SupabaseConfig) => {
+  const performSync = async (config: SupabaseConfig, isAuto = false) => {
+      // Prevent overlapping syncs
+      if (isSyncing) return;
+
       setIsSyncing(true);
-      setSyncStatus('idle');
+      if (!isAuto) setSyncStatus('idle');
       
-      const result = await syncWithCloud(entries, trash, config);
+      // Use refs to get the absolute latest state, avoiding stale closure issues in intervals
+      const currentEntries = stateRef.current.entries;
+      const currentTrash = stateRef.current.trash;
+
+      const result = await syncWithCloud(currentEntries, currentTrash, config);
       
       setIsSyncing(false);
       
       if (result.success && result.mergedEntries) {
           setEntries(result.mergedEntries);
           if (result.mergedTrash) {
-              // We need the full trash list for proper sync state
               setTrash(result.mergedTrash); 
           }
-          setSyncStatus('success');
-          // Clear success message after 2s
-          setTimeout(() => setSyncStatus('idle'), 2000);
+          
+          if (!isAuto) {
+            setSyncStatus('success');
+            setTimeout(() => setSyncStatus('idle'), 2000);
+          }
       } else {
-          setSyncStatus('error');
-          alert(`${t('syncFailed')}: ${result.error}`);
-          // Do not reset status to idle automatically, so user can click to reconfigure
+          if (!isAuto) {
+            setSyncStatus('error');
+            alert(`${t('syncFailed')}: ${result.error}`);
+          } else {
+             console.warn("Auto sync failed:", result.error);
+          }
       }
   };
+
+  // Auto Sync Effect
+  useEffect(() => {
+    if (!supabaseConfig?.initialized || !supabaseConfig.autoSync) return;
+
+    // 1. Sync on Startup (or when autoSync is enabled)
+    performSync(supabaseConfig, true);
+
+    // 2. Schedule Interval if configured
+    if (supabaseConfig.syncInterval && supabaseConfig.syncInterval > 0) {
+        const intervalId = setInterval(() => {
+            performSync(supabaseConfig, true);
+        }, supabaseConfig.syncInterval * 60 * 1000);
+
+        return () => clearInterval(intervalId);
+    }
+  }, [supabaseConfig]); // Re-run when config changes
 
   const handleConfigSave = (newConfig: SupabaseConfig) => {
       saveSupabaseConfig(newConfig);
       setSupabaseConfig(newConfig);
-      // Automatically trigger sync after save
+      // Automatically trigger sync after save (manual trigger)
       performSync(newConfig);
   };
 
@@ -349,15 +384,25 @@ const App: React.FC = () => {
                  <Database size={12} className="mr-1" /> {t('data')}
                </label>
                <div className="space-y-2">
-                 {/* Sync Button */}
-                 <button 
-                    onClick={handleSyncClick}
-                    disabled={isSyncing}
-                    className={`w-full flex items-center justify-center space-x-2 py-2 rounded-lg transition-colors text-sm ${syncStatus === 'success' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : (syncStatus === 'error' ? 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300')}`}
-                 >
-                    {isSyncing ? <RefreshCw className="animate-spin" size={14} /> : (syncStatus === 'success' ? <Check size={14} /> : (syncStatus === 'error' ? <AlertCircle size={14} /> : <Cloud size={14} />))}
-                    <span>{isSyncing ? t('syncing') : (syncStatus === 'success' ? t('syncSuccess') : t('cloudSync'))}</span>
-                 </button>
+                 {/* Sync Button Row */}
+                 <div className="flex space-x-2">
+                     <button 
+                        onClick={handleSyncClick}
+                        disabled={isSyncing}
+                        className={`flex-1 flex items-center justify-center space-x-2 py-2 rounded-lg transition-colors text-sm ${syncStatus === 'success' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : (syncStatus === 'error' ? 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-400' : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300')}`}
+                     >
+                        {isSyncing ? <RefreshCw className="animate-spin" size={14} /> : (syncStatus === 'success' ? <Check size={14} /> : (syncStatus === 'error' ? <AlertCircle size={14} /> : <Cloud size={14} />))}
+                        <span>{isSyncing ? t('syncing') : (syncStatus === 'success' ? t('syncSuccess') : t('cloudSync'))}</span>
+                     </button>
+
+                     <button 
+                        onClick={() => { setIsSettingsOpen(false); setIsSyncConfigOpen(true); }}
+                        className="p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 rounded-lg transition-colors"
+                        title={t('configureSupabase')}
+                     >
+                        <Settings size={18} />
+                     </button>
+                 </div>
 
                  <div className="flex gap-2">
                     <button 

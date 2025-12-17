@@ -1,7 +1,7 @@
 import React from 'react';
-import { LogEntry, GroupedLogs, Language } from '../types';
-import LogItem from './LogItem';
-import { getTranslation } from '../services/i18n';
+import { LogEntry, GroupedLogs, Language } from '../types.ts';
+import LogItem from './LogItem.tsx';
+import { getTranslation } from '../services/i18n.ts';
 
 interface TimelineProps {
   entries: LogEntry[];

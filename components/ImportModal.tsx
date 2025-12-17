@@ -1,8 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { X, FileUp, Database, CheckCircle } from 'lucide-react';
-import { LogEntry, Language } from '../types';
-import { getTranslation } from '../services/i18n';
-import { generateId } from '../services/storage';
+import { LogEntry, Language } from '../types.ts';
+import { getTranslation } from '../services/i18n.ts';
+import { generateId } from '../services/storage.ts';
 
 interface ImportModalProps {
   isOpen: boolean;

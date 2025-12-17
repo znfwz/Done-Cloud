@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, CornerDownLeft } from 'lucide-react';
-import { Language } from '../types';
-import { getTranslation } from '../services/i18n';
+import { Language } from '../types.ts';
+import { getTranslation } from '../services/i18n.ts';
 
 interface InputAreaProps {
   onAdd: (content: string) => void;

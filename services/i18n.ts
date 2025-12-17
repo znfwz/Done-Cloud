@@ -1,4 +1,4 @@
-import { Language } from '../types';
+import { Language } from '../types.ts';
 
 type Translations = {
   [key in Language]: {
@@ -88,7 +88,12 @@ export const translations: Translations = {
     setupGuide: "Table Setup Guide",
     setupGuideDesc: "Please run this SQL in Supabase SQL Editor to create the required table:",
     copySql: "Copy SQL",
-    futureTimeError: "Cannot set time to the future."
+    futureTimeError: "Cannot set time to the future.",
+    autoSyncSetting: "Auto Sync",
+    enableAutoSync: "Enable Auto Sync",
+    syncInterval: "Sync Interval",
+    startupOnly: "Startup Only",
+    everyMin: "Every {min} min",
   },
   zh: {
     today: "今天",
@@ -150,7 +155,7 @@ export const translations: Translations = {
     restore: "恢复",
     trashEmpty: "回收站为空。",
     trashLimit: "仅保存最近 10 条删除记录。",
-    deletedToTrash: "记录已移至回收站。",
+    deletedToTrash: "Item moved to Trash.",
     confirmEmptyTrash: "确定要清空回收站吗？操作无法撤销。",
     search: "搜索",
     searchPlaceholder: "搜索关键词...",
@@ -171,7 +176,12 @@ export const translations: Translations = {
     setupGuide: "数据表设置指南",
     setupGuideDesc: "请在 Supabase 的 SQL 编辑器中运行以下代码以创建必要的数据表：",
     copySql: "复制 SQL",
-    futureTimeError: "无法将时间设置为未来。"
+    futureTimeError: "无法将时间设置为未来。",
+    autoSyncSetting: "自动同步",
+    enableAutoSync: "启用自动同步",
+    syncInterval: "同步间隔",
+    startupOnly: "仅启动时",
+    everyMin: "每 {min} 分钟",
   }
 };
 

@@ -1,5 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
-import { LogEntry, Language } from '../types';
+import { LogEntry, Language } from '../types.ts';
 
 export const generateWeeklyReport = async (entries: LogEntry[], language: Language, apiKey: string): Promise<string> => {
   if (!apiKey) return language === 'zh' ? "未设置 API Key" : "API Key missing";

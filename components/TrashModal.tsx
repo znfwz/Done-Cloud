@@ -1,7 +1,7 @@
 import React from 'react';
 import { X, Trash2, RefreshCcw } from 'lucide-react';
-import { LogEntry, Language } from '../types';
-import { getTranslation } from '../services/i18n';
+import { LogEntry, Language } from '../types.ts';
+import { getTranslation } from '../services/i18n.ts';
 
 interface TrashModalProps {
   isOpen: boolean;

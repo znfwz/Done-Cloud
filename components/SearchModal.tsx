@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Search } from 'lucide-react';
-import { LogEntry, Language } from '../types';
-import { getTranslation } from '../services/i18n';
-import Timeline from './Timeline';
+import { LogEntry, Language } from '../types.ts';
+import { getTranslation } from '../services/i18n.ts';
+import Timeline from './Timeline.tsx';
 
 interface SearchModalProps {
   isOpen: boolean;

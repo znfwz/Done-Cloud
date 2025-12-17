@@ -21,6 +21,8 @@ export interface SupabaseConfig {
   url: string;
   key: string;
   initialized: boolean;
+  autoSync?: boolean; // Enable auto sync
+  syncInterval?: number; // 0 = Startup only, >0 = Minutes
 }
 
 export type Language = 'en' | 'zh';
