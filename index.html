@@ -9,8 +9,10 @@
     <title>Done. | 极简工作日志</title>
     
     <!-- PWA Manifest -->
-    <link rel="manifest" href="manifest.json" />
-    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="manifest" href="./manifest.json" />
+    <!-- Use Data URI for favicon to prevent 404s if files are missing -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📝</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%23111827%22/><text x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22central%22 text-anchor=%22middle%22 font-size=%2260%22>D.</text></svg>">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -91,30 +93,33 @@
   <body class="bg-gray-50 text-gray-900 font-sans antialiased overflow-hidden selection:bg-gray-200 dark:bg-gray-950 dark:text-gray-100 dark:selection:bg-gray-700">
     <div id="root"></div>
 
-    <script type="text/babel" data-type="module" src="index.tsx"></script>
+    <!-- Use explicit relative path -->
+    <script type="text/babel" data-type="module" src="./index.tsx"></script>
     <script>
-      // Service Worker Registration
+      // EMERGENCY FIX: Unregister all existing Service Workers to clear broken caches (404s)
       if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('sw.js')
-            .then(registration => {
-              console.log('SW registered: ', registration);
-            })
-            .catch(registrationError => {
-              console.log('SW registration failed: ', registrationError);
-            });
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          for(let registration of registrations) {
+            console.log('Unregistering existing SW to fix 404s:', registration);
+            registration.unregister();
+          }
+          // Re-register the new one
+          navigator.serviceWorker.register('./sw.js')
+            .then(registration => console.log('New SW registered: ', registration))
+            .catch(err => console.log('SW registration failed: ', err));
         });
       }
-      
+
       // Error Fallback for Babel loading
       window.addEventListener('error', function(e) {
-        if (e.message.includes('index.tsx') || e.message.includes('404')) {
-           console.error("Failed to load application source.", e);
+        if (e.message && (e.message.includes('index.tsx') || e.message.includes('404') || e.message.includes('Import'))) {
+           console.error("Critical Load Error:", e);
            const root = document.getElementById('root');
            if (root && root.innerHTML === '') {
-             root.innerHTML = '<div style="height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center;color:#ef4444;">' +
-               '<h2 style="font-weight:bold;margin-bottom:10px;">Unable to load application</h2>' +
-               '<p style="color:#6b7280;">Please check if index.tsx is present in the root directory.</p>' +
+             root.innerHTML = '<div style="height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center;color:#ef4444;font-family:sans-serif;">' +
+               '<h2 style="font-weight:bold;margin-bottom:10px;">Application Load Failed</h2>' +
+               '<p style="color:#6b7280;margin-bottom:20px;">' + e.message + '</p>' +
+               '<button onclick="window.location.reload()" style="padding:10px 20px;background:#3b82f6;color:white;border:none;border-radius:6px;cursor:pointer;">Reload Page</button>' +
                '</div>';
            }
         }
