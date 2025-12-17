@@ -1,7 +1,7 @@
 {
   "name": "Done. | 极简工作日志",
   "short_name": "Done.",
-  "start_url": "./index.html",
+  "start_url": "index.html",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#111827",
