@@ -1,5 +1,5 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { LogEntry, SupabaseConfig } from '../types.ts';
+import type { LogEntry, SupabaseConfig } from '../types.ts';
 
 let supabaseInstance: SupabaseClient | null = null;
 let currentUrl: string = '';

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { LogEntry, Language, Theme, SupabaseConfig } from './types.ts';
+import type { LogEntry, Language, Theme, SupabaseConfig } from './types.ts';
 import { 
   loadEntries, 
   saveEntries, 
