@@ -1,10 +1,14 @@
 {
   "name": "done-app",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Minimalist work log tool with AI reporting",
+  "repository": {
+    "type": "git",
+    "url": "your-github-url"
+  },
   "scripts": {
     "start": "npx serve .",
-    "build": "echo 'App is ready for static hosting. No bundling required due to Babel Standalone architecture.'"
+    "build": "echo 'Static hosting ready. Publish directory: .'"
   },
   "keywords": [
     "pwa",
