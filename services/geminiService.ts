@@ -1,13 +1,12 @@
 import { GoogleGenAI } from "@google/genai";
-import { LogEntry, Language } from '../types';
+import type { LogEntry, Language } from '../types.ts';
 
 export const generateWeeklyReport = async (entries: LogEntry[], language: Language, apiKey: string): Promise<string> => {
-  if (!apiKey) return language === 'zh' ? "未设置 API Key" : "API Key missing";
-  if (entries.length === 0) return language === 'zh' ? "没有找到记录。" : "No logs found to generate a report.";
-
-  const ai = new GoogleGenAI({ apiKey });
+  // Use the mandatory initialization pattern
+  const ai = new GoogleGenAI({ apiKey: apiKey || (process.env.API_KEY as string) });
   
-  // Format entries for the prompt
+  if (entries.length === 0) return language === 'zh' ? "没有找到记录。" : "No logs found.";
+
   const entriesText = entries.map(e => {
     const date = new Date(e.timestamp).toLocaleDateString(language === 'zh' ? 'zh-CN' : 'en-US');
     const time = new Date(e.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -19,16 +18,10 @@ export const generateWeeklyReport = async (entries: LogEntry[], language: Langua
     : "Please generate the report in English.";
 
   const prompt = `
-    You are a helpful assistant for a busy professional. 
-    Below is a raw list of work logs. 
-    Please format them into a professional Weekly Report (or Daily Report if only one day).
-    
-    Rules:
-    1. Group by Date.
-    2. Summarize key achievements if possible, but keep the specific details.
-    3. Use a clean Markdown format with bullet points.
-    4. Tone: Professional, concise, objective.
-    5. Language: ${langInstruction}
+    You are a professional assistant. Below is a raw list of work logs. 
+    Format them into a clean Markdown Weekly Report.
+    Rules: Group by Date, Summarize achievements, use bullet points.
+    Language: ${langInstruction}
 
     Raw Logs:
     ${entriesText}
@@ -36,14 +29,14 @@ export const generateWeeklyReport = async (entries: LogEntry[], language: Langua
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3-flash-preview', // Use correct model as per guidelines
       contents: prompt,
     });
-    return response.text || (language === 'zh' ? "生成失败。" : "Failed to generate report.");
+    
+    // Correct .text property access (not a function)
+    return response.text || (language === 'zh' ? "生成失败。" : "Failed to generate.");
   } catch (error) {
-    console.error("Gemini generation error:", error);
-    return language === 'zh' 
-      ? "连接 AI 服务出错，请检查网络或 API Key。" 
-      : "Error connecting to AI service. Please check your network or API Key.";
+    console.error("Gemini Error:", error);
+    return language === 'zh' ? "AI 服务连接失败" : "AI Service Error";
   }
 };

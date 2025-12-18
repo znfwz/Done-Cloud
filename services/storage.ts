@@ -1,4 +1,4 @@
-import { LogEntry, Language, Theme, SupabaseConfig } from '../types';
+import { LogEntry, Language, Theme, SupabaseConfig } from '../types.ts';
 
 const STORAGE_KEY = 'done_app_logs_v1';
 const LANG_KEY = 'done_app_lang';

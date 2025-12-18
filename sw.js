@@ -1,8 +1,23 @@
-const CACHE_NAME = 'done-app-v1';
+const CACHE_NAME = 'done-app-v5';
 const ASSETS_TO_CACHE = [
-  './',
-  './index.html',
-  './manifest.json',
+  '/',
+  'index.html',
+  'manifest.json',
+  'index.tsx',
+  'App.tsx',
+  'types.ts',
+  'services/storage.ts',
+  'services/i18n.ts',
+  'services/geminiService.ts',
+  'services/supabaseService.ts',
+  'components/Timeline.tsx',
+  'components/LogItem.tsx',
+  'components/InputArea.tsx',
+  'components/ExportModal.tsx',
+  'components/ImportModal.tsx',
+  'components/TrashModal.tsx',
+  'components/SearchModal.tsx',
+  'components/SyncConfigModal.tsx',
   'https://cdn.tailwindcss.com',
   'https://unpkg.com/@babel/standalone/babel.min.js',
   'https://aistudiocdn.com/react-dom@^19.2.0/client',
@@ -14,67 +29,39 @@ const ASSETS_TO_CACHE = [
   'https://esm.sh/@supabase/supabase-js@2.39.3'
 ];
 
-// Install event: Cache core assets
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('Opened cache');
-      // We use addAll but wrap it to not fail completely if one CDN is flaky
-      return Promise.all(
-        ASSETS_TO_CACHE.map(url => {
-            return cache.add(url).catch(err => console.warn('Failed to cache:', url, err));
-        })
+      return Promise.allSettled(
+        ASSETS_TO_CACHE.map(url => cache.add(url))
       );
     })
   );
   self.skipWaiting();
 });
 
-// Activate event: Clean up old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
+    caches.keys().then((keys) => {
       return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        })
+        keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
       );
     })
   );
   self.clients.claim();
 });
 
-// Fetch event: Network first, then Cache
 self.addEventListener('fetch', (event) => {
-  // Handle cross-origin requests or non-GET requests gracefully
-  if (event.request.method !== 'GET') return;
-  // Ignore unsupported schemes (like chrome-extension://)
-  if (!event.request.url.startsWith('http')) return;
+  if (event.request.method !== 'GET' || !event.request.url.startsWith('http')) return;
 
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // If valid response, clone and cache it (updating the cache)
-        if (!response || response.status !== 200 || response.type !== 'basic' && response.type !== 'cors' && response.type !== 'opaque') {
-          return response;
-        }
-
-        const responseToCache = response.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          try {
-             cache.put(event.request, responseToCache);
-          } catch (err) {
-             // Ignore cache put errors (e.g. quota exceeded)
-          }
-        });
-
+        if (!response || response.status !== 200) return response;
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
         return response;
       })
-      .catch(() => {
-        // If network fails, try cache
-        return caches.match(event.request);
-      })
+      .catch(() => caches.match(event.request))
   );
 });

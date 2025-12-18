@@ -21,9 +21,15 @@ export interface SupabaseConfig {
   url: string;
   key: string;
   initialized: boolean;
-  autoSync?: boolean; // Enable auto sync
-  syncInterval?: number; // 0 = Startup only, >0 = Minutes
+  autoSync?: boolean; 
+  syncInterval?: number;
 }
 
 export type Language = 'en' | 'zh';
 export type Theme = 'light' | 'dark';
+
+/**
+ * Babel Standalone Fix: 
+ * Ensures the file is treated as a valid ES module even after type erasure.
+ */
+export const _ES_MODULE_TYPE_STUB_ = true;

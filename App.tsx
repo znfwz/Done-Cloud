@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { LogEntry, Language, Theme, SupabaseConfig } from './types';
+import { LogEntry, Language, Theme, SupabaseConfig } from './types.ts';
 import { 
   loadEntries, 
   saveEntries, 
@@ -14,17 +14,17 @@ import {
   generateId,
   loadSupabaseConfig,
   saveSupabaseConfig
-} from './services/storage';
+} from './services/storage.ts';
 import { Settings, Download, X, Moon, Sun, Globe, Key, Eye, EyeOff, Check, Database, Upload, Trash2, Search, Import, LogIn, LogOut, Cloud, RefreshCw, AlertCircle } from 'lucide-react';
-import Timeline from './components/Timeline';
-import InputArea from './components/InputArea';
-import ExportModal from './components/ExportModal';
-import ImportModal from './components/ImportModal';
-import TrashModal from './components/TrashModal';
-import SearchModal from './components/SearchModal';
-import SyncConfigModal from './components/SyncConfigModal';
-import { getTranslation } from './services/i18n';
-import { syncWithCloud } from './services/supabaseService';
+import Timeline from './components/Timeline.tsx';
+import InputArea from './components/InputArea.tsx';
+import ExportModal from './components/ExportModal.tsx';
+import ImportModal from './components/ImportModal.tsx';
+import TrashModal from './components/TrashModal.tsx';
+import SearchModal from './components/SearchModal.tsx';
+import SyncConfigModal from './components/SyncConfigModal.tsx';
+import { getTranslation } from './services/i18n.ts';
+import { syncWithCloud } from './services/supabaseService.ts';
 
 const App: React.FC = () => {
   // Initialize state directly from storage to prevent flash of empty content
@@ -135,8 +135,6 @@ const App: React.FC = () => {
       };
       
       setTrash(prev => {
-        // We keep all trash history in state to ensure sync propagates the deletion.
-        // The limit of 10 is only for the UI display.
         const newTrash = [deletedItem, ...prev];
         return newTrash; 
       });
@@ -171,7 +169,7 @@ const App: React.FC = () => {
           ...e, 
           content: newContent,
           timestamp: newTimestamp || e.timestamp,
-          modifiedAt: now, // Update modified time on edit
+          modifiedAt: now, 
           isDeleted: false
         };
       }
@@ -180,7 +178,6 @@ const App: React.FC = () => {
   };
 
   const handleImport = (newEntries: LogEntry[]) => {
-      // Ensure imported entries have modifiedAt
       const sanitized = newEntries.map(e => ({
         ...e,
         modifiedAt: e.modifiedAt || new Date().toISOString(),
@@ -190,8 +187,6 @@ const App: React.FC = () => {
   };
 
   const handleSyncClick = () => {
-      // If no config, open config modal.
-      // If error, we simply retry sync (user can use the gear icon to fix config).
       if (!supabaseConfig) {
           setIsSettingsOpen(false); 
           setIsSyncConfigOpen(true);
@@ -201,13 +196,11 @@ const App: React.FC = () => {
   };
 
   const performSync = async (config: SupabaseConfig, isAuto = false) => {
-      // Prevent overlapping syncs
       if (isSyncing) return;
 
       setIsSyncing(true);
       if (!isAuto) setSyncStatus('idle');
       
-      // Use refs to get the absolute latest state, avoiding stale closure issues in intervals
       const currentEntries = stateRef.current.entries;
       const currentTrash = stateRef.current.trash;
 
@@ -229,20 +222,15 @@ const App: React.FC = () => {
           if (!isAuto) {
             setSyncStatus('error');
             alert(`${t('syncFailed')}: ${result.error}`);
-          } else {
-             console.warn("Auto sync failed:", result.error);
           }
       }
   };
 
-  // Auto Sync Effect
   useEffect(() => {
     if (!supabaseConfig?.initialized || !supabaseConfig.autoSync) return;
 
-    // 1. Sync on Startup (or when autoSync is enabled)
     performSync(supabaseConfig, true);
 
-    // 2. Schedule Interval if configured
     if (supabaseConfig.syncInterval && supabaseConfig.syncInterval > 0) {
         const intervalId = setInterval(() => {
             performSync(supabaseConfig, true);
@@ -250,12 +238,11 @@ const App: React.FC = () => {
 
         return () => clearInterval(intervalId);
     }
-  }, [supabaseConfig]); // Re-run when config changes
+  }, [supabaseConfig]);
 
   const handleConfigSave = (newConfig: SupabaseConfig) => {
       saveSupabaseConfig(newConfig);
       setSupabaseConfig(newConfig);
-      // Automatically trigger sync after save (manual trigger)
       performSync(newConfig);
   };
 
@@ -435,7 +422,6 @@ const App: React.FC = () => {
           onUpdate={updateEntry} 
           lang={lang}
         />
-        {/* Padding to allow scrolling past bottom content so it's not hidden by input */}
         <div className="h-4" /> 
       </main>
 
