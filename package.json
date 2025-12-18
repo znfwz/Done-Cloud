@@ -1,21 +1,24 @@
 {
-  "name": "done-app",
-  "version": "1.0.1",
-  "description": "Minimalist work log tool with AI reporting",
-  "repository": {
-    "type": "git",
-    "url": "your-github-url"
-  },
+  "name": "done-云端同步版",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
   "scripts": {
-    "start": "npx serve .",
-    "build": "echo 'Static hosting ready. Publish directory: .'"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
-  "keywords": [
-    "pwa",
-    "productivity",
-    "gemini",
-    "supabase"
-  ],
-  "author": "Done User",
-  "license": "MIT"
+  "dependencies": {
+    "lucide-react": "^0.555.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "@google/genai": "^1.30.0",
+    "@supabase/supabase-js": "2.39.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.0"
+  }
 }

@@ -1,7 +1,7 @@
 import React from 'react';
-import { LogEntry, GroupedLogs, Language } from '../types.ts';
-import LogItem from './LogItem.tsx';
-import { getTranslation } from '../services/i18n.ts';
+import { LogEntry, GroupedLogs, Language } from '../types';
+import LogItem from './LogItem';
+import { getTranslation } from '../services/i18n';
 
 interface TimelineProps {
   entries: LogEntry[];
@@ -13,11 +13,13 @@ interface TimelineProps {
 const Timeline: React.FC<TimelineProps> = ({ entries, onDelete, onUpdate, lang }) => {
   const t = (key: string) => getTranslation(lang, key);
 
+  // Sort entries: Newest first within the array
   const sortedEntries = [...entries].sort((a, b) => 
     new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
   );
 
   const groupedLogs: GroupedLogs = sortedEntries.reduce((acc, entry) => {
+    // Determine header: Today, Yesterday, or Date String
     const entryDate = new Date(entry.timestamp);
     const today = new Date();
     const yesterday = new Date(today);
@@ -31,9 +33,9 @@ const Timeline: React.FC<TimelineProps> = ({ entries, onDelete, onUpdate, lang }
     });
 
     if (entryDate.toDateString() === today.toDateString()) {
-      dateKey = 'today';
+      dateKey = 'today'; // Use key for translation
     } else if (entryDate.toDateString() === yesterday.toDateString()) {
-      dateKey = 'yesterday';
+      dateKey = 'yesterday'; // Use key for translation
     }
 
     if (!acc[dateKey]) {
@@ -43,6 +45,7 @@ const Timeline: React.FC<TimelineProps> = ({ entries, onDelete, onUpdate, lang }
     return acc;
   }, {} as GroupedLogs);
 
+  // Get keys (dates) and preserve the order
   const orderedKeys = Array.from(new Set(sortedEntries.map(entry => {
      const entryDate = new Date(entry.timestamp);
      const today = new Date();

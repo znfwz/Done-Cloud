@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, CornerDownLeft } from 'lucide-react';
-import { Language } from '../types.ts';
-import { getTranslation } from '../services/i18n.ts';
+import { Language } from '../types';
+import { getTranslation } from '../services/i18n';
 
 interface InputAreaProps {
   onAdd: (content: string) => void;
@@ -13,6 +13,7 @@ const InputArea: React.FC<InputAreaProps> = ({ onAdd, lang }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const t = (key: string) => getTranslation(lang, key);
 
+  // Auto-focus on mount
   useEffect(() => {
     if (inputRef.current) {
       inputRef.current.focus();
@@ -20,6 +21,7 @@ const InputArea: React.FC<InputAreaProps> = ({ onAdd, lang }) => {
   }, []);
 
   const handleFocus = () => {
+    // Helps on mobile to ensure the input is visible above keyboard
     if (inputRef.current) {
       setTimeout(() => {
         inputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -32,6 +34,7 @@ const InputArea: React.FC<InputAreaProps> = ({ onAdd, lang }) => {
     if (text.trim()) {
       onAdd(text.trim());
       setText('');
+      // Keep focus for rapid entry
       if (inputRef.current) inputRef.current.focus();
     }
   };

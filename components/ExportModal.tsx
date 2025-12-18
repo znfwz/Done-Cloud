@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { X, Copy, CheckCircle, Sparkles, FileText, Loader2, AlignLeft, List, Calendar, Archive } from 'lucide-react';
-import { LogEntry, ExportRange, Language } from '../types.ts';
-import { generateWeeklyReport } from '../services/geminiService.ts';
-import { getTranslation } from '../services/i18n.ts';
+import { LogEntry, ExportRange, Language } from '../types';
+import { generateWeeklyReport } from '../services/geminiService';
+import { getTranslation } from '../services/i18n';
 
 interface ExportModalProps {
   isOpen: boolean;
@@ -56,6 +56,7 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, entries, lan
         if (navigator.clipboard && navigator.clipboard.writeText) {
             await navigator.clipboard.writeText(text);
         } else {
+             // Fallback
              const textArea = document.createElement("textarea");
              textArea.value = text;
              textArea.style.position = "fixed";
@@ -120,7 +121,7 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, entries, lan
   const handleGenerateAI = async () => {
     setIsGenerating(true);
     setAiReport(null);
-    const filtered = getFilteredEntries('week');
+    const filtered = getFilteredEntries('week'); // Default to weekly report
     const report = await generateWeeklyReport(filtered, lang, apiKey);
     setAiReport(report);
     setIsGenerating(false);
@@ -147,6 +148,8 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, entries, lan
         </div>
 
         <div className="p-4 space-y-5 overflow-y-auto">
+          
+          {/* Format Selector */}
           <div>
              <label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 block">{t('format')}</label>
              <div className="grid grid-cols-2 gap-2 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl">
@@ -169,55 +172,98 @@ const ExportModal: React.FC<ExportModalProps> = ({ isOpen, onClose, entries, lan
                    </div>
                 </button>
              </div>
+             <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1.5 ml-1">
+                {format === 'raw' ? t('formatRawDesc') : t('formatGroupedDesc')}
+             </p>
           </div>
 
           <div className="space-y-3">
             <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('quickCopy')}</h3>
             <div className="grid grid-cols-2 gap-3">
-              <button onClick={() => handleCopy('today')} className="flex flex-col items-center justify-center p-4 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-all">
+              {/* Today */}
+              <button 
+                onClick={() => handleCopy('today')}
+                className="flex flex-col items-center justify-center p-4 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600 transition-all active:scale-95"
+              >
                 {copiedState === 'today' ? <CheckCircle className="text-green-500 mb-2" /> : <Copy className="text-gray-600 dark:text-gray-400 mb-2" />}
                 <span className="font-medium text-gray-900 dark:text-gray-100">{t('copyToday')}</span>
               </button>
-              <button onClick={() => handleCopy('week')} className="flex flex-col items-center justify-center p-4 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-all">
+
+              {/* Week */}
+              <button 
+                onClick={() => handleCopy('week')}
+                className="flex flex-col items-center justify-center p-4 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600 transition-all active:scale-95"
+              >
                  {copiedState === 'week' && !aiReport ? <CheckCircle className="text-green-500 mb-2" /> : <Copy className="text-gray-600 dark:text-gray-400 mb-2" />}
                 <span className="font-medium text-gray-900 dark:text-gray-100">{t('copyWeek')}</span>
               </button>
-               <button onClick={() => handleCopy('month')} className="flex flex-col items-center justify-center p-4 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-all">
+
+              {/* Month */}
+               <button 
+                onClick={() => handleCopy('month')}
+                className="flex flex-col items-center justify-center p-4 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600 transition-all active:scale-95"
+              >
                  {copiedState === 'month' ? <CheckCircle className="text-green-500 mb-2" /> : <Calendar className="text-gray-600 dark:text-gray-400 mb-2" />}
                 <span className="font-medium text-gray-900 dark:text-gray-100">{t('copyMonth')}</span>
               </button>
-               <button onClick={() => handleCopy('all')} className="flex flex-col items-center justify-center p-4 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition-all">
+
+              {/* All */}
+               <button 
+                onClick={() => handleCopy('all')}
+                className="flex flex-col items-center justify-center p-4 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-600 transition-all active:scale-95"
+              >
                  {copiedState === 'all' ? <CheckCircle className="text-green-500 mb-2" /> : <Archive className="text-gray-600 dark:text-gray-400 mb-2" />}
                 <span className="font-medium text-gray-900 dark:text-gray-100">{t('copyAll')}</span>
               </button>
+
             </div>
           </div>
 
+          {/* AI Feature */}
           <div className="pt-4 border-t border-gray-100 dark:border-gray-800">
             <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 flex items-center">
               <Sparkles size={14} className="mr-1 text-purple-500" /> {t('aiAssistant')}
             </h3>
+            
             {apiKey ? (
               !aiReport ? (
-                <button onClick={handleGenerateAI} disabled={isGenerating} className="w-full py-3 px-4 bg-gray-900 dark:bg-gray-700 text-white rounded-xl flex items-center justify-center space-x-2">
+                <button 
+                  onClick={handleGenerateAI}
+                  disabled={isGenerating}
+                  className="w-full py-3 px-4 bg-gradient-to-r from-gray-900 to-gray-800 dark:from-gray-700 dark:to-gray-600 text-white rounded-xl shadow-lg hover:shadow-xl hover:from-gray-800 hover:to-gray-700 dark:hover:from-gray-600 dark:hover:to-gray-500 transition-all flex items-center justify-center space-x-2 disabled:opacity-70"
+                >
                   {isGenerating ? <Loader2 className="animate-spin" size={20} /> : <FileText size={20} />}
                   <span>{isGenerating ? t('generating') : t('generateReport')}</span>
                 </button>
               ) : (
-                <div className="space-y-3">
-                  <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg text-sm max-h-60 overflow-y-auto whitespace-pre-wrap font-mono">
+                <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2">
+                  <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg text-sm text-gray-700 dark:text-gray-300 max-h-60 overflow-y-auto whitespace-pre-wrap border border-gray-200 dark:border-gray-700 font-mono">
                     {aiReport}
                   </div>
                   <div className="flex space-x-2">
-                      <button onClick={handleCopyAIReport} className="flex-1 py-2 bg-gray-900 dark:bg-gray-700 text-white rounded-lg text-sm">{t('copyReport')}</button>
-                      <button onClick={() => setAiReport(null)} className="px-4 py-2 border dark:border-gray-700 rounded-lg text-sm">{t('back')}</button>
+                      <button 
+                          onClick={handleCopyAIReport}
+                          className="flex-1 py-2 bg-gray-900 dark:bg-gray-700 text-white rounded-lg hover:bg-gray-800 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
+                      >
+                          {t('copyReport')}
+                      </button>
+                      <button 
+                          onClick={() => setAiReport(null)}
+                          className="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm font-medium"
+                      >
+                          {t('back')}
+                      </button>
                   </div>
                 </div>
               )
             ) : (
-              <div className="p-3 bg-orange-50 dark:bg-orange-900/20 text-orange-700 text-xs rounded-lg">{t('configureKey')}</div>
+              <div className="p-3 bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 text-xs rounded-lg flex items-center">
+                {t('configureKey')}
+              </div>
             )}
+             <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-2 text-center">{t('aiDisclaimer')}</p>
           </div>
+
         </div>
       </div>
     </div>
