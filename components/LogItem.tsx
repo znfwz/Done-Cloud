@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { LogEntry, Language } from '../types';
+import { LogEntry, Language } from '../types.ts';
 import { Trash2, Edit2, Check, X, CalendarClock } from 'lucide-react';
-import { getTranslation } from '../services/i18n';
+import { getTranslation } from '../services/i18n.ts';
 
 interface LogItemProps {
   entry: LogEntry;
@@ -15,7 +15,6 @@ const LogItem: React.FC<LogItemProps> = ({ entry, onDelete, onUpdate, lang }) =>
   const [editValue, setEditValue] = useState(entry.content);
   const t = (key: string) => getTranslation(lang, key);
   
-  // Helper to format Date for datetime-local input (YYYY-MM-DDTHH:mm)
   const toLocalISOString = (dateObj: Date) => {
     const offset = dateObj.getTimezoneOffset() * 60000; 
     const localDate = new Date(dateObj.getTime() - offset);
@@ -76,7 +75,7 @@ const LogItem: React.FC<LogItemProps> = ({ entry, onDelete, onUpdate, lang }) =>
                 value={editValue}
                 onChange={(e) => setEditValue(e.target.value)}
                 onKeyDown={handleKeyDown}
-                className="flex-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-gray-800 dark:focus:ring-gray-500 text-gray-900 dark:text-gray-100"
+                className="flex-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 dark:focus:ring-gray-500 text-gray-900 dark:text-gray-100"
               />
             </div>
             <div className="flex items-center space-x-2">

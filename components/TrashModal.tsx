@@ -1,7 +1,7 @@
 import React from 'react';
 import { X, Trash2, RefreshCcw } from 'lucide-react';
-import { LogEntry, Language } from '../types';
-import { getTranslation } from '../services/i18n';
+import { LogEntry, Language } from '../types.ts';
+import { getTranslation } from '../services/i18n.ts';
 
 interface TrashModalProps {
   isOpen: boolean;
@@ -20,7 +20,6 @@ const TrashModal: React.FC<TrashModalProps> = ({ isOpen, onClose, trashItems, on
   return (
     <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
       <div className="bg-white dark:bg-gray-900 w-full max-w-md rounded-2xl shadow-2xl flex flex-col max-h-[80vh] border border-gray-100 dark:border-gray-800">
-        
         <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-800">
           <div className="flex items-center space-x-2">
             <Trash2 size={20} className="text-gray-500" />
@@ -30,11 +29,10 @@ const TrashModal: React.FC<TrashModalProps> = ({ isOpen, onClose, trashItems, on
             <X size={20} />
           </button>
         </div>
-
         <div className="p-4 flex-1 overflow-y-auto min-h-[200px]">
           {trashItems.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-gray-400 dark:text-gray-500 space-y-2">
-              <Trash2 size={48} className="opacity-20" />
+            <div className="flex flex-col items-center justify-center h-full text-gray-400 opacity-20 space-y-2">
+              <Trash2 size={48} />
               <p>{t('trashEmpty')}</p>
             </div>
           ) : (
@@ -43,31 +41,18 @@ const TrashModal: React.FC<TrashModalProps> = ({ isOpen, onClose, trashItems, on
               {trashItems.map(item => (
                 <div key={item.id} className="flex items-start justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg group border border-gray-100 dark:border-gray-800">
                   <div className="flex-1 min-w-0 mr-3">
-                     <p className="text-xs text-gray-400 mb-1 font-mono">
-                        {new Date(item.timestamp).toLocaleString(lang === 'zh' ? 'zh-CN' : 'en-US')}
-                     </p>
+                     <p className="text-xs text-gray-400 mb-1 font-mono">{new Date(item.timestamp).toLocaleString()}</p>
                      <p className="text-sm text-gray-800 dark:text-gray-200 break-words line-clamp-2">{item.content}</p>
                   </div>
-                  <button 
-                    onClick={() => onRestore(item.id)}
-                    className="p-2 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/40 transition-colors shrink-0"
-                    title={t('restore')}
-                  >
-                    <RefreshCcw size={16} />
-                  </button>
+                  <button onClick={() => onRestore(item.id)} className="p-2 text-blue-600 bg-blue-50 dark:bg-blue-900/20 rounded-full"><RefreshCcw size={16} /></button>
                 </div>
               ))}
             </div>
           )}
         </div>
-
         {trashItems.length > 0 && (
           <div className="p-4 border-t border-gray-100 dark:border-gray-800">
-            <button 
-              type="button"
-              onClick={onEmpty}
-              className="w-full flex items-center justify-center space-x-2 py-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors text-sm font-medium"
-            >
+            <button onClick={onEmpty} className="w-full flex items-center justify-center space-x-2 py-3 bg-red-50 dark:bg-red-900/20 text-red-600 rounded-xl">
               <Trash2 size={16} />
               <span>{t('emptyTrash')}</span>
             </button>

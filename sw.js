@@ -1,23 +1,23 @@
-const CACHE_NAME = 'done-app-v5';
+const CACHE_NAME = 'done-app-v6';
 const ASSETS_TO_CACHE = [
-  '/',
-  'index.html',
-  'manifest.json',
-  'index.tsx',
-  'App.tsx',
-  'types.ts',
-  'services/storage.ts',
-  'services/i18n.ts',
-  'services/geminiService.ts',
-  'services/supabaseService.ts',
-  'components/Timeline.tsx',
-  'components/LogItem.tsx',
-  'components/InputArea.tsx',
-  'components/ExportModal.tsx',
-  'components/ImportModal.tsx',
-  'components/TrashModal.tsx',
-  'components/SearchModal.tsx',
-  'components/SyncConfigModal.tsx',
+  './',
+  './index.html',
+  './manifest.json',
+  './index.tsx',
+  './App.tsx',
+  './types.ts',
+  './services/storage.ts',
+  './services/i18n.ts',
+  './services/geminiService.ts',
+  './services/supabaseService.ts',
+  './components/Timeline.tsx',
+  './components/LogItem.tsx',
+  './components/InputArea.tsx',
+  './components/ExportModal.tsx',
+  './components/ImportModal.tsx',
+  './components/TrashModal.tsx',
+  './components/SearchModal.tsx',
+  './components/SyncConfigModal.tsx',
   'https://cdn.tailwindcss.com',
   'https://unpkg.com/@babel/standalone/babel.min.js',
   'https://aistudiocdn.com/react-dom@^19.2.0/client',
@@ -32,8 +32,9 @@ const ASSETS_TO_CACHE = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
+      // Use Settled to prevent one missing file from breaking PWA install
       return Promise.allSettled(
-        ASSETS_TO_CACHE.map(url => cache.add(url))
+        ASSETS_TO_CACHE.map(url => cache.add(url).catch(err => console.warn(`SW: Failed to cache ${url}`)))
       );
     })
   );

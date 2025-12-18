@@ -9,7 +9,7 @@
     <title>Done. | 极简工作日志</title>
     
     <!-- PWA Manifest & Icons -->
-    <link rel="manifest" href="manifest.json" />
+    <link rel="manifest" href="./manifest.json" />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📝</text></svg>">
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%22%23111827%22/><text x=%2250%25%22 y=%2250%25%22 dominant-baseline=%22central%22 text-anchor=%22middle%22 font-size=%2260%22 fill=%22white%22>D.</text></svg>">
 
@@ -53,42 +53,31 @@
   <body class="bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100 overflow-hidden">
     <div id="root"></div>
 
-    <script type="text/babel" data-type="module" src="index.tsx"></script>
+    <script type="text/babel" data-type="module" data-presets="typescript,react" src="./index.tsx"></script>
     
     <script>
-      // Service Worker Registration with origin safety check
+      // Production-grade Service Worker Registration
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          // In some sandboxed environments (like Google Cloud Shell or AI Studio previews),
-          // Service Workers can fail due to domain/origin mismatches.
-          // We use a strictly relative path to minimize issues.
-          const swPath = './sw.js';
-          
-          navigator.serviceWorker.register(swPath)
-            .then(reg => {
-              console.log('SW Registered successfully:', reg.scope);
-            })
-            .catch(err => {
-              // Silently fail if in a sandbox that doesn't support SW
-              if (window.location.hostname.includes('usercontent.goog')) {
-                console.warn('Service Worker registration skipped or failed in sandbox environment.');
-              } else {
-                console.error('Service Worker Error:', err);
-              }
-            });
+          // Use a strictly relative path to ensure registration on all static hosts
+          navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('SW Registered'))
+            .catch(err => console.warn('SW registration skipped in this environment.'));
         });
       }
 
-      // White screen safety net
+      // Robust error tracking for white screen issues
       window.addEventListener('error', (e) => {
-        if (e.message && (e.message.includes('index.tsx') || e.message.includes('Babel') || e.message.includes('import'))) {
+        const isCritical = e.message && (e.message.includes('index.tsx') || e.message.includes('Babel') || e.message.includes('import'));
+        if (isCritical) {
+          console.error("Critical Load Error:", e);
           const root = document.getElementById('root');
           if (root && root.innerHTML === '') {
             root.innerHTML = `
-              <div style="height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;font-family:sans-serif;">
-                <h1 style="color:#ef4444;font-size:1.5rem;font-weight:bold;">Initialization Error</h1>
-                <p style="color:#6b7280;margin:10px 0;">${e.message}</p>
-                <button onclick="location.reload()" style="background:#111827;color:white;padding:8px 16px;border-radius:6px;border:none;cursor:pointer;margin-top:10px;">Retry</button>
+              <div style="height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;font-family:sans-serif;background:#111827;color:white;">
+                <h1 style="font-size:1.5rem;font-weight:bold;margin-bottom:1rem;">App Failed to Load</h1>
+                <p style="color:#9ca3af;margin-bottom:2rem;max-width:300px;line-height:1.5;">${e.message || 'Source file resolution error.'}</p>
+                <button onclick="location.reload()" style="background:#374151;color:white;padding:12px 24px;border-radius:8px;border:none;cursor:pointer;font-weight:bold;">Refresh Page</button>
               </div>
             `;
           }
