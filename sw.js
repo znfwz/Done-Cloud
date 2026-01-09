@@ -1,80 +1,53 @@
-const CACHE_NAME = 'done-app-v1';
+const CACHE_NAME = 'done-app-v2-prod';
+// For a simple Vite app, we cache the shell. 
+// The built JS/CSS files have hashes and will be cached by the browser's HTTP cache effectively.
+// A more advanced setup would use vite-plugin-pwa to inject the precache manifest here.
 const ASSETS_TO_CACHE = [
-  './',
-  './index.html',
-  './manifest.json',
-  'https://cdn.tailwindcss.com',
-  'https://unpkg.com/@babel/standalone/babel.min.js',
-  'https://aistudiocdn.com/react-dom@^19.2.0/client',
-  'https://aistudiocdn.com/lucide-react@^0.555.0',
-  'https://aistudiocdn.com/react@^19.2.0/',
-  'https://aistudiocdn.com/react@^19.2.0',
-  'https://aistudiocdn.com/react-dom@^19.2.0/',
-  'https://aistudiocdn.com/@google/genai@^1.30.0',
-  'https://esm.sh/@supabase/supabase-js@2.39.3'
+  '/',
+  '/index.html',
+  '/manifest.json'
 ];
 
-// Install event: Cache core assets
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      console.log('Opened cache');
-      // We use addAll but wrap it to not fail completely if one CDN is flaky
-      return Promise.all(
-        ASSETS_TO_CACHE.map(url => {
-            return cache.add(url).catch(err => console.warn('Failed to cache:', url, err));
-        })
-      );
-    })
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS_TO_CACHE))
   );
   self.skipWaiting();
 });
 
-// Activate event: Clean up old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
+    caches.keys().then((names) => Promise.all(
+      names.filter(name => name !== CACHE_NAME).map(name => caches.delete(name))
+    ))
   );
   self.clients.claim();
 });
 
-// Fetch event: Network first, then Cache
 self.addEventListener('fetch', (event) => {
-  // Handle cross-origin requests or non-GET requests gracefully
-  if (event.request.method !== 'GET') return;
-  // Ignore unsupported schemes (like chrome-extension://)
-  if (!event.request.url.startsWith('http')) return;
-
+  if (event.request.method !== 'GET' || !event.request.url.startsWith('http')) return;
+  
   event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        // If valid response, clone and cache it (updating the cache)
-        if (!response || response.status !== 200 || response.type !== 'basic' && response.type !== 'cors' && response.type !== 'opaque') {
+    caches.match(event.request).then((cached) => {
+      // Return cached response if found
+      if (cached) return cached;
+
+      // Otherwise fetch from network
+      return fetch(event.request).then((response) => {
+        // Optional: Cache runtime requests (like the built JS/CSS files)
+        // Check if valid response
+        if (!response || response.status !== 200 || response.type !== 'basic') {
           return response;
         }
 
+        // Clone and cache
         const responseToCache = response.clone();
         caches.open(CACHE_NAME).then((cache) => {
-          try {
-             cache.put(event.request, responseToCache);
-          } catch (err) {
-             // Ignore cache put errors (e.g. quota exceeded)
-          }
+          cache.put(event.request, responseToCache);
         });
 
         return response;
-      })
-      .catch(() => {
-        // If network fails, try cache
-        return caches.match(event.request);
-      })
+      });
+    })
   );
 });
