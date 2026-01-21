@@ -1,7 +1,12 @@
 import { GoogleGenAI } from "@google/genai";
 import { LogEntry, Language } from '../types';
 
-export const generateWeeklyReport = async (entries: LogEntry[], language: Language, apiKey: string): Promise<string> => {
+export const generateAIReport = async (
+  entries: LogEntry[], 
+  type: 'week' | 'month' | 'year',
+  language: Language, 
+  apiKey: string
+): Promise<string> => {
   if (!apiKey) return language === 'zh' ? "未设置 API Key" : "API Key missing";
   if (entries.length === 0) return language === 'zh' ? "没有找到记录。" : "No logs found to generate a report.";
 
@@ -18,14 +23,22 @@ export const generateWeeklyReport = async (entries: LogEntry[], language: Langua
     ? "Please generate the report in Simplified Chinese (简体中文)." 
     : "Please generate the report in English.";
 
+  const typeLabels = {
+    week: { en: 'Weekly', zh: '周' },
+    month: { en: 'Monthly', zh: '月度' },
+    year: { en: 'Annual', zh: '年度' }
+  };
+  
+  const currentTypeLabel = language === 'zh' ? typeLabels[type].zh : typeLabels[type].en;
+
   const prompt = `
     You are a helpful assistant for a busy professional. 
     Below is a raw list of work logs. 
-    Please format them into a professional Weekly Report (or Daily Report if only one day).
+    Please format them into a professional ${currentTypeLabel} Report.
     
     Rules:
-    1. Group by Date.
-    2. Summarize key achievements if possible, but keep the specific details.
+    1. Group by Date (or by Month if this is an Annual Report and the list is very long).
+    2. Summarize key achievements.
     3. Use a clean Markdown format with bullet points.
     4. Tone: Professional, concise, objective.
     5. Language: ${langInstruction}

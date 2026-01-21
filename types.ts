@@ -10,7 +10,7 @@ export interface GroupedLogs {
   [dateString: string]: LogEntry[];
 }
 
-export type ExportRange = 'today' | 'week' | 'month' | 'all';
+export type ExportRange = 'today' | 'week' | 'month' | 'year' | 'all';
 
 export interface GenerateReportOptions {
   range: ExportRange;
